@@ -44,19 +44,19 @@ func listDir(dirPath string) ([]string, error) {
 	return dirFiles, nil
 }
 
-func transcode_file(filepath string) error {
+func transcodeFile(filepath string) error {
 	fname := path.Base(filepath)
 	fdir := path.Dir(filepath)
 
 	outfilename := path.Join(fdir, fmt.Sprintf("%s.ts", strings.Split(fname, ".")[0]))
 
-	ffmpeg_path, err := exec.LookPath("ffmpeg")
+	ffmpegPath, err := exec.LookPath("ffmpeg")
 	if err != nil {
 		log.Printf("ffmpeg Error: %v", err.Error())
 	}
 
 	cmd := exec.Command(
-		ffmpeg_path,
+		ffmpegPath,
 		"-threads",
 		"auto",
 		"-i",
@@ -81,7 +81,7 @@ func worker(id int, jobs <-chan string, results chan<- string) {
 	for j := range jobs {
 		log.Println("worker", id, "processing job", path.Base(j))
 		time.Sleep(time.Second)
-		err := transcode_file(j)
+		err := transcodeFile(j)
 		if err != nil {
 			results <- fmt.Sprintf("%s is in Error", path.Base(j))
 		}
@@ -94,10 +94,8 @@ func fcheck(filepath string) (string, error) {
 	if err != nil {
 		err := errors.New("NO SUCH FILE")
 		return "NO SUCH FILE", err
-	} else {
-		return "FILE EXISTS", nil
 	}
-	return "", nil
+	return "FILE EXISTS", nil
 }
 
 var (
@@ -121,13 +119,13 @@ func main() {
 	}
 
 	for _, j := range dirFilez {
-		source_file := path.Join(*sourceDirectory, j)
-		_, err := fcheck(source_file)
+		sourceFile := path.Join(*sourceDirectory, j)
+		_, err := fcheck(sourceFile)
 		if err != nil {
-			fmt.Println("File does not exist: ", path.Base(source_file))
+			fmt.Println("File does not exist: ", path.Base(sourceFile))
 		}
-		log.Println("sending: ", path.Base(source_file))
-		jobs <- source_file
+		log.Println("sending: ", path.Base(sourceFile))
+		jobs <- sourceFile
 	}
 	close(jobs)
 
